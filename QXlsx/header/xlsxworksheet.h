@@ -170,6 +170,8 @@ public:
     CellRange autoFilter() const;
     bool isWindowProtected() const;
     void setWindowProtected(bool protect);
+    bool isSheetProtected() const;
+    void setSheetProtected(bool protect);
     bool isFormulasVisible() const;
     void setFormulasVisible(bool visible);
     bool isGridLinesVisible() const;

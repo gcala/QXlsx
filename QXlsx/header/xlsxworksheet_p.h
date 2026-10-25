@@ -274,6 +274,7 @@ public:
     XlsxSheetFormatProps sheetFormatProps;
 
     bool windowProtection;
+    bool sheetProtection; // <sheetProtection>: locks the cells with Format::locked() (Excel default)
     bool showFormulas;
     bool showGridLines;
     bool showRowColHeaders;

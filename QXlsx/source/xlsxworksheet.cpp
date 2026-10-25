@@ -57,6 +57,7 @@ const int XLSX_STRING_MAX = 32767;
 WorksheetPrivate::WorksheetPrivate(Worksheet *p, Worksheet::CreateFlag flag)
     : AbstractSheetPrivate(p, flag)
     , windowProtection(false)
+    , sheetProtection(false)
     , showFormulas(false)
     , showGridLines(true)
     , showRowColHeaders(true)
@@ -248,6 +249,26 @@ bool Worksheet::isWindowProtected() const
 {
     Q_D(const Worksheet);
     return d->windowProtection;
+}
+
+/*!
+ * Returns whether the sheet content is protected (Excel: Review > Protect Sheet).
+ */
+bool Worksheet::isSheetProtected() const
+{
+    Q_D(const Worksheet);
+    return d->sheetProtection;
+}
+
+/*!
+ * Protects/unprotects the sheet content based on \a protect, without password.
+ * When protected, Excel only allows editing the cells whose format has
+ * Format::setLocked(false); all the other cells are locked by default.
+ */
+void Worksheet::setSheetProtected(bool protect)
+{
+    Q_D(Worksheet);
+    d->sheetProtection = protect;
 }
 
 /*!
@@ -1421,6 +1442,13 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
     if (d->dimension.isValid())
         d->saveXmlSheetData(writer);
     writer.writeEndElement(); // sheetData
+
+    if (d->sheetProtection) {
+        writer.writeEmptyElement(QStringLiteral("sheetProtection"));
+        writer.writeAttribute(QStringLiteral("sheet"), QStringLiteral("1"));
+        writer.writeAttribute(QStringLiteral("objects"), QStringLiteral("1"));
+        writer.writeAttribute(QStringLiteral("scenarios"), QStringLiteral("1"));
+    }
 
     if (d->autoFilterRange.isValid()) {
         writer.writeEmptyElement(QStringLiteral("autoFilter"));
@@ -2818,6 +2846,9 @@ bool Worksheet::loadFromXmlFile(QIODevice *device)
                 d->loadXmlColumnsInfo(reader);
             } else if (reader.name() == QLatin1String("sheetData")) {
                 d->loadXmlSheetData(reader);
+            } else if (reader.name() == QLatin1String("sheetProtection")) {
+                const auto sheet = reader.attributes().value(QLatin1String("sheet")).toString();
+                d->sheetProtection = (sheet == QLatin1String("1") || sheet == QLatin1String("true"));
             } else if (reader.name() == QLatin1String("autoFilter")) {
                 QXmlStreamAttributes attributes = reader.attributes();
                 d->autoFilterRange = CellRange(attributes.value(QLatin1String("ref")).toString());
