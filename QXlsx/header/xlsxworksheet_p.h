@@ -283,6 +283,7 @@ public:
     bool showRuler;
     bool showOutlineSymbols;
     bool showWhiteSpace;
+    bool freezeFirstRow;
 
     QRegularExpression urlPattern;
 

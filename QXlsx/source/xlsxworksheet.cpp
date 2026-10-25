@@ -66,6 +66,7 @@ WorksheetPrivate::WorksheetPrivate(Worksheet *p, Worksheet::CreateFlag flag)
     , showRuler(false)
     , showOutlineSymbols(true)
     , showWhiteSpace(true)
+    , freezeFirstRow(false)
     , urlPattern(QStringLiteral("^([fh]tt?ps?://)|(mailto:)|(file://)"))
 {
 }
@@ -256,6 +257,21 @@ void Worksheet::setWindowProtected(bool protect)
 {
     Q_D(Worksheet);
     d->windowProtection = protect;
+}
+
+void Worksheet::freezeFirstRow()
+{
+    Q_D(Worksheet);
+    d->freezeFirstRow = true;
+}
+
+/*!
+ * Returns whether the first row of the sheet is frozen.
+ */
+bool Worksheet::isFirstRowFrozen() const
+{
+    Q_D(const Worksheet);
+    return d->freezeFirstRow;
 }
 
 /*!
@@ -1330,6 +1346,13 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
     if (!d->showWhiteSpace)
         writer.writeAttribute(QStringLiteral("showWhiteSpace"), QStringLiteral("0"));
     writer.writeAttribute(QStringLiteral("workbookViewId"), QStringLiteral("0"));
+    if (d->freezeFirstRow) {
+        writer.writeEmptyElement(QStringLiteral("pane"));
+        writer.writeAttribute(QStringLiteral("ySplit"), QStringLiteral("1"));
+        writer.writeAttribute(QStringLiteral("topLeftCell"), QStringLiteral("A2"));
+        writer.writeAttribute(QStringLiteral("activePane"), QStringLiteral("bottomLeft"));
+        writer.writeAttribute(QStringLiteral("state"), QStringLiteral("frozen"));
+    }
     writer.writeEndElement(); // sheetView
     writer.writeEndElement(); // sheetViews
 
@@ -2610,6 +2633,12 @@ void WorksheetPrivate::loadXmlSheetViews(QXmlStreamReader &reader)
             showOutlineSymbols =
                 attrs.value(QLatin1String("showOutlineSymbols")) != QLatin1String("0");
             showWhiteSpace = attrs.value(QLatin1String("showWhiteSpace")) != QLatin1String("0");
+        } else if (reader.tokenType() == QXmlStreamReader::StartElement &&
+                   reader.name() == QLatin1String("pane")) {
+            QXmlStreamAttributes attrs = reader.attributes();
+            freezeFirstRow = attrs.value(QLatin1String("state")) == QLatin1String("frozen") &&
+                             attrs.value(QLatin1String("ySplit")) == QLatin1String("1") &&
+                             attrs.value(QLatin1String("xSplit")).toInt() == 0;
         }
     }
 }

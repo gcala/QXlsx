@@ -164,6 +164,8 @@ public:
     bool groupColumns(const CellRange &range, bool collapsed = true);
     CellRange dimension() const;
 
+    void freezeFirstRow();
+    bool isFirstRowFrozen() const;
     bool isWindowProtected() const;
     void setWindowProtected(bool protect);
     bool isFormulasVisible() const;
