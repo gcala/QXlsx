@@ -275,6 +275,25 @@ bool Worksheet::isFirstRowFrozen() const
 }
 
 /*!
+ * Enables the autofilter buttons on the header row of \a range.
+ */
+void Worksheet::setAutoFilter(const CellRange &range)
+{
+    Q_D(Worksheet);
+    d->autoFilterRange = range;
+}
+
+/*!
+ * Returns the range the autofilter is applied to, or an invalid range
+ * if the sheet has no autofilter.
+ */
+CellRange Worksheet::autoFilter() const
+{
+    Q_D(const Worksheet);
+    return d->autoFilterRange;
+}
+
+/*!
  * Return whether formulas instead of their calculated results shown in cells
  */
 bool Worksheet::isFormulasVisible() const
@@ -1402,6 +1421,11 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
     if (d->dimension.isValid())
         d->saveXmlSheetData(writer);
     writer.writeEndElement(); // sheetData
+
+    if (d->autoFilterRange.isValid()) {
+        writer.writeEmptyElement(QStringLiteral("autoFilter"));
+        writer.writeAttribute(QStringLiteral("ref"), d->autoFilterRange.toString());
+    }
 
     d->saveXmlMergeCells(writer);
     for (const ConditionalFormatting &cf : d->conditionalFormattingList)
@@ -2794,6 +2818,9 @@ bool Worksheet::loadFromXmlFile(QIODevice *device)
                 d->loadXmlColumnsInfo(reader);
             } else if (reader.name() == QLatin1String("sheetData")) {
                 d->loadXmlSheetData(reader);
+            } else if (reader.name() == QLatin1String("autoFilter")) {
+                QXmlStreamAttributes attributes = reader.attributes();
+                d->autoFilterRange = CellRange(attributes.value(QLatin1String("ref")).toString());
             } else if (reader.name() == QLatin1String("mergeCells")) {
                 d->loadXmlMergeCells(reader);
             } else if (reader.name() == QLatin1String("dataValidations")) {

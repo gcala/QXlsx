@@ -166,6 +166,8 @@ public:
 
     void freezeFirstRow();
     bool isFirstRowFrozen() const;
+    void setAutoFilter(const CellRange &range);
+    CellRange autoFilter() const;
     bool isWindowProtected() const;
     void setWindowProtected(bool protect);
     bool isFormulasVisible() const;

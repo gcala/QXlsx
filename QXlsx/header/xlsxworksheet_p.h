@@ -284,6 +284,7 @@ public:
     bool showOutlineSymbols;
     bool showWhiteSpace;
     bool freezeFirstRow;
+    CellRange autoFilterRange;
 
     QRegularExpression urlPattern;
 
