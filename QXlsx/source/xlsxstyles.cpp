@@ -1222,19 +1222,16 @@ bool Styles::readCellXfs(QXmlStreamReader &reader)
                     if (ok && numFmtIndex >= 0) {
                         // Determine if format should be applied
                         // Per OOXML spec: default for cellXfs is false, but we have a special case:
-                        // LibreOffice omits applyNumberFormat even for custom formats (>= 164)
-                        // If a custom format is referenced, we assume it should be applied
+                        // LibreOffice omits applyNumberFormat for both built-in and custom formats
+                        // If a non-General format is referenced, we assume it should be applied
                         bool apply = false;
                         if (xfAttrs.hasAttribute(QLatin1String("applyNumberFormat"))) {
                             apply = parseXsdBoolean(
                                 xfAttrs.value(QLatin1String("applyNumberFormat")).toString());
                         } else {
-                            // Heuristic: If numFmtId references a custom format (>= 164), apply it
+                            // Heuristic: If numFmtId is not General (0), apply it
                             // This handles LibreOffice files that omit applyNumberFormat
-                            const auto &it = m_customNumFmtIdMap.constFind(numFmtIndex);
-                            if (it != m_customNumFmtIdMap.constEnd()) {
-                                apply = true; // Custom format found, apply it
-                            }
+                            apply = numFmtIndex != 0;
                         }
 
                         if (apply) {
